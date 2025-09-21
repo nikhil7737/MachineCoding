@@ -15,6 +15,7 @@ public class ElevatorController {
     private final int id;
     private final Lock lock;
     private final Condition notEmpty;
+    private boolean isRunning = true;
 
     @Getter
     private final TreeSet<Integer> floorRequests;
@@ -46,24 +47,25 @@ public class ElevatorController {
     }
 
     private void processRequests() {
-        int nextFloor = -1;
-        lock.lock();
-        try {
-            while (floorRequests.isEmpty()) {
-                notEmpty.await();
+        while (isRunning) {
+            int nextFloor = -1;
+            lock.lock();
+            try {
+                while (floorRequests.isEmpty()) {
+                    System.out.printf("No requests present for elevator %s. going to sleep\n", id);
+                    notEmpty.await();
+                }
+                nextFloor = floorSelectionStrategy.getNextFloor(this);
+                floorRequests.remove(nextFloor);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            } finally {
+                lock.unlock();
             }
-            nextFloor = floorSelectionStrategy.getNextFloor(this);
-            floorRequests.remove(nextFloor);
-        }
-        catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-        }
-        finally {
-            lock.unlock();
-        }
 
-        if (nextFloor != -1) {
-            elevatorCar.move(nextFloor);
+            if (nextFloor != -1) {
+                elevatorCar.move(nextFloor);
+            }
         }
     }
 

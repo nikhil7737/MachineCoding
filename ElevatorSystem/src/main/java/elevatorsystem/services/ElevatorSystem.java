@@ -8,15 +8,20 @@ import java.util.List;
 
 public class ElevatorSystem {
 
-    private List<ElevatorController> elevatorControllers;
+    private final List<ElevatorController> elevatorControllers;
 
-    private IElevatorSelectionStrategy selectionStrategy;
+    private final IElevatorSelectionStrategy selectionStrategy;
+
+    public ElevatorSystem(List<ElevatorController> elevatorControllers, IElevatorSelectionStrategy selectionStrategy) {
+        this.elevatorControllers = elevatorControllers;
+        this.selectionStrategy = selectionStrategy;
+    }
 
 
-
-    public void addExternalRequest(ExternalRequest request) {
+    public int addExternalRequest(ExternalRequest request) {
         ElevatorController elevatorController = selectionStrategy.selectElevator(elevatorControllers, request);
         elevatorController.addFloorRequest(request.getFloor());
+        return elevatorController.getId();
     }
 
     public void addInternalRequest(InternalRequest request) {
